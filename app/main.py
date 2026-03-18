@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 
+from .routers import rooms
+
 app = FastAPI()
 
 
+app.include_router(prefix='/api', router=rooms.router)
+
+
 @app.get("/")
-def read_root():
+def root():
     return {"Hello": "app"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    return {"item_id": item_id, "q": q}
