@@ -4,7 +4,7 @@ from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 import uuid
 
-from .routers import rooms
+from .routers import system
 
 
 app = FastAPI()
@@ -19,7 +19,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(prefix='/api', router=rooms.router)
+API_PREFIX = '/api'
+
+app.include_router(prefix=API_PREFIX, router=system.router)
 
 
 @app.get("/")
