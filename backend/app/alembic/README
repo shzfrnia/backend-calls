@@ -1,0 +1,11 @@
+### generate migration (if change db)
+
+```
+alembic revision --autogenerate
+```
+
+### update db version
+
+```
+alembic upgrade head [version]
+```
