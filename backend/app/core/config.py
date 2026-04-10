@@ -92,6 +92,7 @@ class Settings(BaseSettings):
 
     EMAIL_TEST_USER: EmailStr = "test@example.com"
     FIRST_SUPERUSER: EmailStr
+    FIRST_SUPERUSER_LOGIN: str
     FIRST_SUPERUSER_PASSWORD: str
 
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
@@ -107,8 +108,15 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _enforce_non_default_secrets(self) -> Self:
-        self._check_default_secret("SECRET_KEY", self.SECRET_KEY)
-        self._check_default_secret("POSTGRES_PASSWORD", self.POSTGRES_PASSWORD)
+        self._check_default_secret(
+            "SECRET_KEY", self.SECRET_KEY
+        )
+        self._check_default_secret(
+            "POSTGRES_PASSWORD", self.POSTGRES_PASSWORD
+        )
+        self._check_default_secret(
+            "FIRST_SUPERUSER_LOGIN", self.FIRST_SUPERUSER_LOGIN
+        )
         self._check_default_secret(
             "FIRST_SUPERUSER_PASSWORD", self.FIRST_SUPERUSER_PASSWORD
         )
