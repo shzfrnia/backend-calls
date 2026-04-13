@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 import uuid
 
 from sqlmodel import Field, Relationship, SQLModel
@@ -6,7 +6,7 @@ from sqlmodel import Field, Relationship, SQLModel
 from app.models.user_server import UserServer
 
 if TYPE_CHECKING:
-    from app.models.user import User
+    from app.models import User, Role
 
 
 class ServerBase(SQLModel):
@@ -25,9 +25,20 @@ class ServerUpdate(ServerBase):
 
 class Server(ServerBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+
+    owner_id: uuid.UUID = Field(
+        foreign_key="user.id", nullable=False, ondelete="CASCADE"
+    )
+    owner: Optional["User"] = Relationship(back_populates="my_servers")
+
     users: list["User"] = Relationship(
         back_populates="servers", link_model=UserServer,
         sa_relationship_kwargs={"passive_deletes": True}
+    )
+
+    roles: list["Role"] = Relationship(
+        back_populates="servers",
+        cascade_delete=True
     )
 
 
@@ -35,6 +46,6 @@ class ServerPublic(ServerBase):
     id: uuid.UUID
 
 
-class ServerPublic(SQLModel):
+class ServersPublic(SQLModel):
     data: list[ServerPublic]
     count: int

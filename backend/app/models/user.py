@@ -49,19 +49,24 @@ class UserUpdateMe(SQLModel):
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
+
     created_at: datetime = Field(
         nullable=False,
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),
     )
+
     items: list["Item"] = Relationship(
         back_populates="owner",
         cascade_delete=True
     )
+
     servers: list["Server"] = Relationship(
         back_populates="users", link_model=UserServer,
         sa_relationship_kwargs={"passive_deletes": True}
     )
+
+    my_servers: list["Server"] = Relationship(back_populates="owner")
 
 
 class UserPublic(UserBase):

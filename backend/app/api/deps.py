@@ -2,7 +2,10 @@ from collections.abc import Generator
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import (
+    Depends, HTTPException, status,
+    WebSocket, WebSocketException, Query
+)
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
@@ -13,6 +16,7 @@ from app.core.config import settings
 from app.core.db import engine
 from app.models.token import TokenPayload
 from app.models.user import User
+
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
@@ -47,7 +51,32 @@ def get_current_user(session: SessionDep, token: TokenDep) -> User:
     return user
 
 
+async def get_ws_current_user(
+    websocket: WebSocket,
+    session: SessionDep,
+    token: str | None = Query(default=None),
+):
+    if token is None:
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+        )
+        token_data = TokenPayload(**payload)
+    except (InvalidTokenError, ValidationError):
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+
+    user = session.get(User, token_data.sub)
+    if not user:
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+    if not user.is_active:
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+    return user
+
+
 CurrentUser = Annotated[User, Depends(get_current_user)]
+CurrentWsUser = Annotated[User, Depends(get_ws_current_user)]
 
 
 def get_current_active_superuser(current_user: CurrentUser) -> User:
