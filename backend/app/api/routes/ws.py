@@ -17,10 +17,7 @@ async def websocket_endpoint(
 
     while True:
         try:
-            message = await websocket.receive_json()
-
-            for client in manager.connected_clients:
-                await manager.send_message(client, message)
+            await websocket.receive_json()
 
         except WebSocketDisconnect:
             await manager.disconnect(user=current_user)
