@@ -1,4 +1,3 @@
-from fastapi import APIRouter
 from fastapi import APIRouter, Depends
 from pydantic.networks import EmailStr
 
