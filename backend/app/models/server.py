@@ -1,7 +1,11 @@
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 import uuid
 
+from sqlalchemy import DateTime
 from sqlmodel import Field, Relationship, SQLModel
+
+from app.utils.datetime import get_datetime_utc
 
 from app.models.user_server import UserServer
 
@@ -25,6 +29,12 @@ class ServerUpdate(ServerBase):
 
 class Server(ServerBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+
+    created_at: datetime = Field(
+        nullable=False,
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True)
+    )
 
     owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE"

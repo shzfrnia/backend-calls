@@ -15,6 +15,11 @@ class UserServerBase(SQLModel):
     )
 
 
+class UserServerCreate(UserServerBase):
+    user_id: uuid.UUID = Field(foreign_key="user.id")
+    server_id: uuid.UUID = Field(foreign_key="server.id")
+
+
 class UserServer(UserServerBase, table=True):
     __table_args__ = (UniqueConstraint("user_id", "server_id", "order"),)
 
