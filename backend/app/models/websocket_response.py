@@ -1,5 +1,3 @@
-
-
 class WebSocketJsonResponse():
     def __init__(self, type: str, payload):
         self.type = type

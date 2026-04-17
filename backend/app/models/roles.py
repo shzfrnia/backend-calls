@@ -34,7 +34,7 @@ class Role(RoleBase, table=True):
     server_id: uuid.UUID = Field(
         foreign_key="server.id", nullable=False, ondelete="CASCADE"
     )
-    servers: Optional["Server"] = Relationship(back_populates="roles")
+    server: Optional["Server"] = Relationship(back_populates="roles")
 
 
 class RolePublic(RoleBase):

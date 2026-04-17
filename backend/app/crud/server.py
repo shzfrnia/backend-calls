@@ -1,3 +1,5 @@
+import uuid
+
 from sqlmodel import Session
 
 from app.models.user import User
@@ -26,3 +28,16 @@ def create_server(*, session: Session, user: User, server_draft: ServerCreate) -
     session.refresh(server)
 
     return server
+
+
+def delete_server(*, session: Session, user: User, id: uuid.UUID) -> bool:
+    server = session.get(Server, id)
+    if not server:
+        raise ValueError("Item not found")
+    if user.id != server.owner_id:
+        raise PermissionError(detail="Not enough permissions")
+
+    session.delete(server)
+    session.commit()
+
+    return True

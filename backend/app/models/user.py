@@ -3,19 +3,15 @@ import uuid
 from datetime import datetime
 
 from pydantic import EmailStr
-from sqlalchemy import DateTime
 from sqlmodel import Field, Relationship, SQLModel
 
-from app.utils.datetime import get_datetime_utc
-
 from app.models.user_server import UserServer
+from app.models.mixin import CreatedMixin
 
 if TYPE_CHECKING:
-    from app.models.item import Item
-    from app.models.server import Server
+    from app.models import Item, Server
 
 
-# Shared properties
 class UserBase(SQLModel):
     email: EmailStr = Field(unique=True, index=True, max_length=255)
     login: str = Field(unique=True, min_length=5, max_length=255)
@@ -35,7 +31,6 @@ class UserRegister(SQLModel):
     login: str | None = Field(min_length=5, max_length=255)
 
 
-# Properties to receive via API on update, all are optional
 class UserUpdate(UserBase):
     email: EmailStr | None = Field(default=None, max_length=255)
     password: str | None = Field(default=None, min_length=8, max_length=128)
@@ -46,15 +41,9 @@ class UserUpdateMe(SQLModel):
     email: EmailStr | None = Field(default=None, max_length=255)
 
 
-class User(UserBase, table=True):
+class User(CreatedMixin, UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
-
-    created_at: datetime = Field(
-        nullable=False,
-        default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),
-    )
 
     items: list["Item"] = Relationship(
         back_populates="owner",
