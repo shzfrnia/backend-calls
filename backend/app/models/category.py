@@ -14,7 +14,7 @@ class CategoryBase(OrderMixin, SQLModel):
 
 
 class CategoryCreate(CategoryBase):
-    pass
+    server_id: uuid.UUID = Field(foreign_key="server.id")
 
 
 class CategoryUpdate(CategoryBase):
@@ -29,4 +29,9 @@ class Category(CategoryBase, table=True):
     )
     server: Optional["Server"] = Relationship(back_populates="categories")
 
-    channels: list["Channel"] = Relationship(back_populates='category')
+    channels: list["Channel"] = Relationship(
+        back_populates='category',
+        sa_relationship_kwargs={
+            "order_by": "Channel.order"
+        }
+    )

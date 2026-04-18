@@ -13,7 +13,11 @@ if TYPE_CHECKING:
 
 class ChannelBase(OrderMixin, SQLModel):
     name: str = Field(nullable=False, min_length=1, max_length=255)
-    limit: int = Field()
+    limit: int = Field(default=0, ge=0, le=100, nullable=False)
+
+    category_id: Optional[uuid.UUID] = Field(
+        default=None, foreign_key="category.id"
+    )
 
 
 class ChannelCreate(ChannelBase):
@@ -32,7 +36,7 @@ class Channel(ChannelBase, table=True):
     )
     server: Optional["Server"] = Relationship(back_populates="channels")
 
-    category_id: uuid.UUID = Field(
+    category_id: Optional[uuid.UUID] = Field(
         foreign_key="category.id", nullable=True, ondelete="CASCADE"
     )
     category: Optional["Category"] = Relationship(back_populates="channels")

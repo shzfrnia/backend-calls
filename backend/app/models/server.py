@@ -44,12 +44,18 @@ class Server(CreatedMixin, ServerBase, table=True):
 
     categories: list["Category"] = Relationship(
         back_populates='server',
-        cascade_delete=True
+        cascade_delete=True,
+        sa_relationship_kwargs={
+            "order_by": "Category.order"
+        }
     )
 
     channels: list["Channel"] = Relationship(
         back_populates='server',
-        cascade_delete=True
+        cascade_delete=True,
+        sa_relationship_kwargs={
+            "order_by": "Channel.order"
+        }
     )
 
 
