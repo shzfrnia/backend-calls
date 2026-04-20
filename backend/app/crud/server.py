@@ -1,6 +1,7 @@
 import uuid
 
-from sqlmodel import Session
+from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
 
 from app.models.user import User
 from app.models.server import Server, ServerCreate
@@ -87,3 +88,21 @@ def delete_server(*, session: Session, user: User, id: uuid.UUID) -> bool:
     session.commit()
 
     return True
+
+
+def get_user_with_servers_tree(*, session: Session, user_id: uuid.UUID):
+    statement = (
+        select(User)
+        .where(User.id == user_id)
+        .options(
+            selectinload(User.servers)
+            .selectinload(Server.categories),
+            selectinload(User.servers).selectinload(
+                Server.categories).selectinload(Category.channels),
+            selectinload(User.servers)
+            .selectinload(Server.channels)
+        )
+    )
+
+    result = session.exec(statement)
+    return result.one_or_none()

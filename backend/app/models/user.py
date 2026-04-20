@@ -52,7 +52,10 @@ class User(CreatedMixin, UserBase, table=True):
 
     servers: list["Server"] = Relationship(
         back_populates="users", link_model=UserServer,
-        sa_relationship_kwargs={"passive_deletes": True}
+        sa_relationship_kwargs={
+            "passive_deletes": True,
+            "order_by": "UserServer.order"
+        }
     )
 
     my_servers: list["Server"] = Relationship(back_populates="owner")

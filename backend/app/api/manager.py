@@ -3,22 +3,32 @@ import json
 
 from fastapi.websockets import WebSocket
 
+from sqlmodel import Session
+
 from app.models.user import User
 from app.models.server import Server
 from app.models.channel import Channel
 from app.models.category import Category
 from app.models.websocket_response import WebSocketJsonResponse
 
+from app.crud.server import get_user_with_servers_tree
+
+from app.core.db import engine
+
 
 class UpdateServers(WebSocketJsonResponse):
     type = "update-servers"
 
     def __init__(self, user: User):
-        servers = map(self.transform_server, user.servers)
+        with Session(engine) as session:
+            servers = map(
+                self.transform_server,
+                get_user_with_servers_tree(
+                    session=session, user_id=user.id
+                ).servers
+            )
 
         self.payload = {'servers': list(servers)}
-
-        # print(json.dumps(self.payload, indent=4, ensure_ascii=False))
 
     def transform_server(self, server: Server):
         return {
@@ -29,7 +39,7 @@ class UpdateServers(WebSocketJsonResponse):
     def transform_category(self, category: Category):
         return {
             **category.model_dump(mode='json'),
-            'channels': []
+            'channels': list(map(self.transform_channel, category.channels))
         }
 
     def transform_channel(self, channel: Channel):
@@ -41,23 +51,15 @@ class UpdateServers(WebSocketJsonResponse):
         return json_data
 
     def build_channels_tree(self, server: Server):
-        categories = {
-            ch['id']: ch for ch in map(
-                self.transform_category, server.categories
-            )
-        }
+        categories = map(self.transform_category, server.categories)
 
-        inCategory, withoutCategory = [], []
-        for ch in map(self.transform_channel, server.channels):
-            (inCategory if ch["category_id"] else withoutCategory).append(ch)
-
-        for key, group in itertools.groupby(
-            sorted(inCategory, key=lambda x: x['category_id']), key=lambda x: x["category_id"]
-        ):
-            categories[key]['channels'] = list(group)
+        withoutCategory = map(
+            self.transform_channel,
+            (ch for ch in server.channels if ch.category_id is None)
+        )
 
         return sorted(
-            itertools.chain(categories.values(), withoutCategory),
+            itertools.chain(categories, withoutCategory),
             key=lambda x: x["order"]
         )
 
