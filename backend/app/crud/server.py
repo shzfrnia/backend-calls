@@ -3,7 +3,7 @@ import uuid
 from sqlmodel import Session, select, col
 from sqlalchemy.orm import selectinload
 
-from app.models.user import User
+from app.models.user import User, UserPublic
 from app.models.server import Server, ServerCreate
 from app.models.user_server import UserServer, UserServerCreate
 
@@ -126,3 +126,17 @@ def get_server_users_by_ids(*, session: Session, server_id: uuid.UUID, user_ids:
     result = session.exec(statement)
 
     return result.all()
+
+
+def get_channel_by_id(*, session: Session, channel_id: uuid.UUID, user: UserPublic):
+    statement = (
+        select(Channel)
+        .join(Server)
+        .join(UserServer)
+        .where(UserServer.user_id == user.id)
+        .where(Channel.id == channel_id)
+    )
+
+    result = session.exec(statement)
+
+    return result.one_or_none()

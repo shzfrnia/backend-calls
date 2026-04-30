@@ -12,10 +12,14 @@ from app.models.user import User, UserPublic, ChannelUser
 from app.models.channel import ChannelPublic
 from app.models.ws_client import WSClient
 from app.models.ws.messages.update_servers import UpdateServers
-from app.models.ws.messages.channels import UserLeftChannelResponse, UserJoinChannelResponse
-from app.models.ws.message import WSMessage, UserJoinChannelMessage, UserLeftChannelMessage
+from app.models.ws.messages.channels import (
+    UserLeftChannelResponse, UserJoinChannelResponse, UpdateChannelUserResponse
+)
+from app.models.ws.message import (
+    WSMessage, UserJoinChannelMessage, UserLeftChannelMessage, UserUpdateMuteMessage
+)
 
-from app.crud.server import get_server_users_by_ids
+from app.crud.server import get_server_users_by_ids, get_channel_by_id
 
 
 ws_message_adapter = TypeAdapter(WSMessage)
@@ -57,14 +61,25 @@ class WebSocketManager:
                 ).to_dict()
             )
 
-    async def join_channel(self, user: ChannelUser, channel: ChannelPublic):
+    async def join_channel(self, user: ChannelUser, channel: uuid.UUID):
         user_client = self.get_client(user)
+
+        if not user_client:
+            return
 
         await self.left_channel(user=user)
 
-        user_client.channel = channel
+        with Session(engine) as session:
+            channel = get_channel_by_id(
+                session=session,
+                channel_id=channel, user=user
+            )
+            if channel:
+                user_client.channel = ChannelPublic(**channel.model_dump())
+            else:
+                return
 
-        for server_user in self.get_server_users(channel.server_id):
+        for server_user in self.get_server_users(user_client.channel.server_id):
             client = self.get_client(server_user)
 
             if client:
@@ -95,16 +110,47 @@ class WebSocketManager:
 
             user_client.channel = None
 
+    async def update_mute(self, user: User, mic: bool, head: bool):
+        user_client = self.get_client(user)
+
+        if user_client and user_client.channel:
+            user_client.user.mic_mute = mic
+            user_client.user.head_mute = head
+
+            for server_user in self.get_server_users(user_client.channel.server_id):
+                client = self.get_client(server_user)
+                if client:
+                    await client.ws.send_json(
+                        UpdateChannelUserResponse(
+                            payload={
+                                "user": user_client.user,
+                                'channel': user_client.channel
+                            }
+                        ).model_dump(mode='json')
+                    )
+
     async def handle_ws_message(self, current_user: User, message: dict[str, any]):
         try:
             parsed = ws_message_adapter.validate_python(message)
 
             match parsed:
                 case UserJoinChannelMessage(payload=data):
-                    await self.join_channel(user=data.user, channel=data.channel)
+                    await self.join_channel(
+                        user=ChannelUser(
+                            **current_user.model_dump(mode='json'),
+                            mic_mute=data.mute.mic,
+                            head_mute=data.mute.head
+                        ),
+                        channel=data.channel
+                    )
 
                 case UserLeftChannelMessage(payload=data):
-                    await self.left_channel(user=data.user)
+                    await self.left_channel(user=current_user)
+
+                case UserUpdateMuteMessage(payload=data):
+                    await self.update_mute(
+                        user=current_user, mic=data.mic, head=data.head
+                    )
 
         except Exception as e:
             print('@@@@@@yoooy@@@@@@', e)
