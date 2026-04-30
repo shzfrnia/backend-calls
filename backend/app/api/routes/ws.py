@@ -15,6 +15,7 @@ async def websocket_endpoint(
     mic: bool = False,
     head: bool = False
 ):
+
     await manager.connect(
         websocket=websocket,
         user=current_user,
@@ -22,12 +23,12 @@ async def websocket_endpoint(
         headphones=head
     )
 
-    while True:
-        try:
+    try:
+        while True:
             await manager.handle_ws_message(
                 current_user=current_user,
                 message=await websocket.receive_json()
             )
 
-        except WebSocketDisconnect:
-            manager.disconnect(user=current_user)
+    except WebSocketDisconnect:
+        await manager.disconnect(user=current_user)

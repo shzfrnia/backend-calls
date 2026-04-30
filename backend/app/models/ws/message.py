@@ -1,10 +1,10 @@
 from typing import Union, Annotated
 from pydantic import Field
 
-from .messages.channels import UserJoinChannel, UserLeftChannel
+from .messages.channels import UserJoinChannelMessage, UserLeftChannelMessage
 
 
 WSMessage = Annotated[
-    Union[UserJoinChannel, UserLeftChannel],
+    Union[UserJoinChannelMessage, UserLeftChannelMessage],
     Field(discriminator="type")
 ]
