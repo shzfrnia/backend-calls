@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 import uuid
 from datetime import datetime
 
-from pydantic import EmailStr
+from pydantic import EmailStr, computed_field
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.user_server import UserServer
@@ -20,7 +20,6 @@ class UserBase(SQLModel):
     is_superuser: bool = False
 
 
-# Properties to receive via API on creation
 class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=128)
 
@@ -64,6 +63,15 @@ class User(CreatedMixin, UserBase, table=True):
 class UserPublic(UserBase):
     id: uuid.UUID
     created_at: datetime
+
+    @computed_field
+    def display_name(self) -> str:
+        return self.nickname or self.login
+
+
+class ChannelUser(UserPublic):
+    mic_mute: bool
+    head_mute: bool
 
 
 class UsersPublic(SQLModel):

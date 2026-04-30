@@ -11,13 +11,23 @@ router = APIRouter(tags=["ws"])
 @router.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket,
-    current_user: CurrentWsUser
+    current_user: CurrentWsUser,
+    mic: bool = False,
+    head: bool = False
 ):
-    await manager.connect(websocket=websocket, user=current_user)
+    await manager.connect(
+        websocket=websocket,
+        user=current_user,
+        mic=mic,
+        headphones=head
+    )
 
     while True:
         try:
-            await websocket.receive_json()
+            await manager.handle_ws_message(
+                current_user=current_user,
+                message=await websocket.receive_json()
+            )
 
         except WebSocketDisconnect:
-            await manager.disconnect(user=current_user)
+            manager.disconnect(user=current_user)

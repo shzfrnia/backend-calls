@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Optional
 import uuid
 
-
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.mixin import OrderMixin
@@ -40,3 +39,8 @@ class Channel(ChannelBase, table=True):
         foreign_key="category.id", nullable=True, ondelete="CASCADE"
     )
     category: Optional["Category"] = Relationship(back_populates="channels")
+
+
+class ChannelPublic(ChannelBase):
+    id: uuid.UUID
+    server_id: uuid.UUID

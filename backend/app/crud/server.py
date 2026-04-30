@@ -1,6 +1,6 @@
 import uuid
 
-from sqlmodel import Session, select
+from sqlmodel import Session, select, col
 from sqlalchemy.orm import selectinload
 
 from app.models.user import User
@@ -95,14 +95,34 @@ def get_user_with_servers_tree(*, session: Session, user_id: uuid.UUID):
         select(User)
         .where(User.id == user_id)
         .options(
+            # selectinload(User.servers)
+            # .selectinload(Server.users),
+
             selectinload(User.servers)
             .selectinload(Server.categories),
-            selectinload(User.servers).selectinload(
-                Server.categories).selectinload(Category.channels),
+
+            selectinload(User.servers)
+            .selectinload(Server.categories)
+            .selectinload(Category.channels),
+
             selectinload(User.servers)
             .selectinload(Server.channels)
         )
     )
 
     result = session.exec(statement)
+
     return result.one_or_none()
+
+
+def get_server_users_by_ids(*, session: Session, server_id: uuid.UUID, user_ids: list[uuid.UUID]):
+    statement = (
+        select(User)
+        .join(UserServer)
+        .where(UserServer.server_id == server_id)
+        .where(col(UserServer.user_id).in_(user_ids))
+    )
+
+    result = session.exec(statement)
+
+    return result.all()

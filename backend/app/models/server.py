@@ -7,7 +7,8 @@ from app.models.user_server import UserServer
 from app.models.mixin import CreatedMixin
 
 if TYPE_CHECKING:
-    from app.models import User, Role, Category, Channel
+    from app.models.user import User
+    from app.models import Role, Category, Channel
 
 
 class ServerBase(SQLModel):
