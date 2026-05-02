@@ -46,8 +46,8 @@ def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
     count = session.exec(count_statement).one()
 
     statement = (
-        select(User).order_by(col(User.created_at).desc()
-                              ).offset(skip).limit(limit)
+        select(User).order_by(
+            col(User.created_at).desc()).offset(skip).limit(limit)
     )
     users = session.exec(statement).all()
 
@@ -131,6 +131,9 @@ def read_user_me(current_user: CurrentUser) -> Any:
     """
     Get current user.
     """
+    # print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    # print(current_user.servers)
+    # print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     return current_user
 
 
