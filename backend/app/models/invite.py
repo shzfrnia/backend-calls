@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Optional
 import uuid
+from datetime import datetime
 
 from sqlmodel import Field, Relationship, SQLModel, CheckConstraint
 
@@ -50,6 +51,7 @@ class InvitePublic(InviteBase):
     used: int
     code: str
     user: "UserPublic"
+    created_at: datetime
 
 
 class InvitesPublic(SQLModel):
