@@ -51,7 +51,7 @@ async def delete_server(
 
 
 @router.post("/{id}/invite")
-async def invite_code(
+async def get_or_create_invite_code(
     *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID
 ) -> InvitePublic:
     """
@@ -64,7 +64,7 @@ async def invite_code(
 
 
 @router.get("/{id}/invites")
-async def invites(
+async def all_server_invites(
     *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID
 ) -> InvitesPublic:
     """
@@ -95,11 +95,11 @@ async def delete_invite(
 
 
 @router.delete("/{id}/invites")
-async def delete_invite(
+async def delete_all_invites(
     *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID
 ) -> Message:
     """
-    Delete invite code.
+    Delete all invites code.
     """
     server_crud.delete_server_invites(
         session=session,
