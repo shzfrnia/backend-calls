@@ -196,13 +196,7 @@ def get_server_invites(*, session: Session, server_id: uuid.UUID, user_id: uuid.
     if (not server_user.server.owner_id == user_id):
         raise ValueError('Permission')
 
-    statement = (
-        select(Invite)
-        .where(Invite.server_id == server_id)
-        .options(selectinload(Invite.user))
-    )
-
-    return session.exec(statement).all()
+    return server_user.server.invites
 
 
 def delete_server_invite(
@@ -258,5 +252,57 @@ def delete_server_invites(
 
     session.exec(statement)
     session.commit()
+
+    return True
+
+
+def get_server_by_code(*, session: Session, code: str):
+    statement = (select(Server).join(Invite).where(Invite.code == code))
+    return session.exec(statement).one_or_none()
+
+
+def join_user_to_server_by_code(*, session: Session, code: str, user: User):
+    invite = session.exec(
+        (select(Invite).where(Invite.code == code))
+    ).one_or_none()
+
+    if not invite:
+        raise ValueError('Server not found')
+
+    server = invite.server
+
+    link = UserServer.model_validate(
+        UserServerCreate(
+            user_id=user.id,
+            server_id=server.id,
+            order=len(user.servers) + 1
+        )
+    )
+
+    invite.used = invite.used + 1
+
+    session.add(invite)
+    session.add(link)
+    session.commit()
+
+    return True
+
+
+def leave_from_server(*, session: Session, server_id: str, user: User):
+    statement = (
+        select(UserServer)
+        .where(
+            UserServer.server_id == server_id,
+            UserServer.user_id == user.id
+        )
+    )
+
+    link = session.exec(statement).one_or_none()
+
+    if link:
+        session.delete(link)
+        session.commit()
+    else:
+        raise ValueError('link not found')
 
     return True

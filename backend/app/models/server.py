@@ -63,7 +63,7 @@ class Server(CreatedMixin, ServerBase, table=True):
         back_populates='server',
         cascade_delete=True,
         sa_relationship_kwargs={
-            "order_by": "Invite.created_at"
+            "order_by": "desc(Invite.created_at)"
         }
     )
 

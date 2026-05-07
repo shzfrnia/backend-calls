@@ -1,6 +1,6 @@
 import uuid
 from typing import Any
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 
 from app.api.deps import CurrentUser, SessionDep
 from app.api.manager import manager
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/servers", tags=["servers"])
 @router.post("/", response_model=ServerPublic)
 async def create_server(
     *, session: SessionDep, current_user: CurrentUser, server_draft: ServerCreate
-) -> Any:
+) -> ServerPublic:
     """
     Create new server.
     """
@@ -64,11 +64,11 @@ async def invite_code(
 
 
 @router.get("/{id}/invites")
-async def invite_code(
+async def invites(
     *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID
 ) -> InvitesPublic:
     """
-    Get or create invite code.
+    Get invites code.
     """
     result = server_crud.get_server_invites(
         session=session, user_id=current_user.id, server_id=id
@@ -108,3 +108,59 @@ async def delete_invite(
     )
 
     return Message(message="Invites deleted successfully")
+
+
+@router.get("/invite/{code}")
+async def get_server_by_invite(
+    *, session: SessionDep, current_user: CurrentUser, code: str
+) -> ServerPublic:
+    """
+    Get server by invite code
+    """
+    server = server_crud.get_server_by_code(session=session, code=code)
+
+    if not server:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    return ServerPublic(**server.model_dump())
+
+
+@router.post("/invite/{code}")
+async def join_server_by_invite(
+    *, session: SessionDep, current_user: CurrentUser, code: str
+) -> Message:
+    """
+    Join server by code
+    """
+    try:
+        server_crud.join_user_to_server_by_code(
+            session=session, user=current_user, code=code
+        )
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    await manager.update_servers(user=current_user)
+
+    return Message(message="Joined")
+
+
+@router.post("/{id}/leave")
+async def leave_from_server(
+    *, session: SessionDep, current_user: CurrentUser, id: uuid.UUID
+) -> Message:
+    """
+    Join server by code
+    """
+    try:
+        server_crud.leave_from_server(
+            session=session, user=current_user, server_id=id
+        )
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    client = manager.get_client(user=current_user)
+    if client.channel and client.channel.server_id == id:
+        await manager.left_channel(user=current_user)
+    await manager.update_servers(user=current_user)
+
+    return Message(message="Success")
