@@ -7,12 +7,11 @@ from app.models.user_server import UserServer
 from app.models.mixin import CreatedMixin
 
 if TYPE_CHECKING:
-    from app.models.user import User
-    from app.models import Role, Category, Channel
+    from app.models import User, Role, Category, Channel, Invite
 
 
 class ServerBase(SQLModel):
-    name: str = Field(min_length=1, max_length=255)
+    name: str = Field(min_length=1, max_length=255, nullable=False)
 
 
 class ServerCreate(ServerBase):
@@ -37,6 +36,7 @@ class Server(CreatedMixin, ServerBase, table=True):
         back_populates="servers", link_model=UserServer,
         sa_relationship_kwargs={"passive_deletes": True}
     )
+    server_users: list["UserServer"] = Relationship(back_populates="server")
 
     roles: list["Role"] = Relationship(
         back_populates="server",
@@ -56,6 +56,14 @@ class Server(CreatedMixin, ServerBase, table=True):
         cascade_delete=True,
         sa_relationship_kwargs={
             "order_by": "Channel.order"
+        }
+    )
+
+    invites: list["Invite"] = Relationship(
+        back_populates='server',
+        cascade_delete=True,
+        sa_relationship_kwargs={
+            "order_by": "desc(Invite.created_at)"
         }
     )
 

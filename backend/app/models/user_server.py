@@ -1,8 +1,13 @@
+from typing import TYPE_CHECKING, Optional
 import uuid
 
-from sqlmodel import Field, SQLModel, UniqueConstraint, CheckConstraint
+from sqlmodel import Field, SQLModel, UniqueConstraint, Relationship
 
 from app.models.mixin import CreatedMixin, OrderMixin
+
+
+if TYPE_CHECKING:
+    from app.models import Server, User
 
 
 class UserServerBase(OrderMixin, SQLModel):
@@ -20,7 +25,10 @@ class UserServer(CreatedMixin, UserServerBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
 
     user_id: uuid.UUID = Field(foreign_key="user.id", ondelete="CASCADE")
+    user: Optional["User"] = Relationship(back_populates="user_servers")
+
     server_id: uuid.UUID = Field(foreign_key="server.id", ondelete="CASCADE")
+    server: Optional["Server"] = Relationship(back_populates="server_users")
 
 
 class UserServerPublic(UserServerBase):

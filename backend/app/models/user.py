@@ -9,7 +9,7 @@ from app.models.user_server import UserServer
 from app.models.mixin import CreatedMixin
 
 if TYPE_CHECKING:
-    from app.models import Item, Server
+    from app.models import Item, Server, Invite
 
 
 class UserBase(SQLModel):
@@ -56,8 +56,11 @@ class User(CreatedMixin, UserBase, table=True):
             "order_by": "UserServer.order"
         }
     )
+    user_servers: list["UserServer"] = Relationship(back_populates='user')
 
     my_servers: list["Server"] = Relationship(back_populates="owner")
+
+    invites: list["Invite"] = Relationship(back_populates='user')
 
 
 class UserPublic(UserBase):
