@@ -27,12 +27,11 @@ class UserCreate(UserBase):
 class UserRegister(SQLModel):
     email: EmailStr = Field(max_length=255)
     password: str = Field(min_length=8, max_length=128)
-    login: str | None = Field(min_length=5, max_length=255)
+    login: str = Field(min_length=5, max_length=255)
 
 
 class UserUpdate(UserBase):
-    email: EmailStr | None = Field(default=None, max_length=255)
-    password: str | None = Field(default=None, min_length=8, max_length=128)
+    email: EmailStr | None = None
 
 
 class UserUpdateMe(SQLModel):
