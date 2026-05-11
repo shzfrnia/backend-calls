@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 import uuid
 from datetime import datetime
 
@@ -6,40 +6,53 @@ from pydantic import EmailStr, computed_field
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.user_server import UserServer
+from app.models.password import PasswordField
 from app.models.mixin import CreatedMixin
 
 if TYPE_CHECKING:
     from app.models import Server, Invite
 
 
+LoginField = Annotated[
+    str,
+    Field(unique=True, min_length=5, max_length=255, index=True)
+]
+EmailField = Annotated[
+    EmailStr,
+    Field(unique=True, index=True, max_length=255)
+]
+NicknameField = Annotated[
+    str | None,
+    Field(default=None, max_length=255)
+]
+
+
 class UserBase(SQLModel):
-    email: EmailStr = Field(unique=True, index=True, max_length=255)
-    login: str = Field(unique=True, min_length=5, max_length=255)
-    nickname: str | None = Field(default=None, max_length=255)
+    email: EmailField
+    login: LoginField
+    nickname: NicknameField
 
 
 class UserCreate(UserBase):
-    password: str = Field(min_length=8, max_length=128)
+    password: PasswordField
 
 
 class UserRegister(SQLModel):
-    email: EmailStr = Field(max_length=255)
-    password: str = Field(min_length=8, max_length=128)
-    login: str = Field(min_length=5, max_length=255)
-
-
-class UserUpdate(UserBase):
-    email: EmailStr | None = None
+    email: EmailField
+    password: PasswordField
+    login: LoginField
 
 
 class UserUpdateMe(SQLModel):
-    nickname: str | None = Field(default=None, max_length=255)
-    email: EmailStr | None = Field(default=None, max_length=255)
+    nickname: NicknameField
+    email: EmailField | None
 
 
 class User(CreatedMixin, UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+
     hashed_password: str
+
     is_active: bool = True
     is_superuser: bool = False
 

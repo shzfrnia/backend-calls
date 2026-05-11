@@ -13,7 +13,7 @@ from app.api.deps import CurrentUser, SessionDep
 from app.core.security import get_password_hash, verify_password
 
 from app.models.message import Message
-from app.models.password import UpdatePassword
+from app.models.password import UpdatePassword, CheckPassword
 from app.models.user import UserPublic, UserUpdateMe
 
 
@@ -81,7 +81,7 @@ def get_current_user(current_user: CurrentUser) -> UserPublic:
 
 
 @router.delete("/me", response_model=Message)
-def delete_current_user(session: SessionDep, current_user: CurrentUser) -> Message:
+def delete_current_user(session: SessionDep, body: CheckPassword, current_user: CurrentUser) -> Message:
     """
     Delete own user.
     """
@@ -89,6 +89,13 @@ def delete_current_user(session: SessionDep, current_user: CurrentUser) -> Messa
         raise AccessDeniedError(
             "Super users are not allowed to delete themselves"
         )
+
+    verified, _ = verify_password(
+        body.password, current_user.hashed_password
+    )
+
+    if not verified:
+        raise BadRequestError("Incorrect password")
 
     session.delete(current_user)
     session.commit()
