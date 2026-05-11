@@ -13,7 +13,7 @@ from app.api.deps import (
 )
 
 from app.core.security import get_password_hash, verify_password
-from app.models.item import Item
+
 
 from app.models.message import Message
 from app.models.password import UpdatePassword
