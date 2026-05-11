@@ -6,8 +6,6 @@ from app.errors import (
     AccessDeniedError
 )
 
-from app import crud
-
 from app.api.deps import CurrentUser, SessionDep
 
 from app.core.security import get_password_hash, verify_password
@@ -15,6 +13,8 @@ from app.core.security import get_password_hash, verify_password
 from app.models.message import Message
 from app.models.password import UpdatePassword, CheckPassword
 from app.models.user import UserPublic, UserUpdateMe
+
+from app.crud import user as user_crud
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -29,7 +29,7 @@ def update_current_user(
     """
 
     if user_in.email:
-        existing_user = crud.get_user_by_username(
+        existing_user = user_crud.get_user_by_username(
             session=session, username=user_in.email
         )
 

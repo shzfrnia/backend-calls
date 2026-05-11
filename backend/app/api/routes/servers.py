@@ -2,12 +2,13 @@ import uuid
 from fastapi import APIRouter
 
 from app.api.deps import CurrentUser, SessionDep
+
 from app.api.manager import manager
 
 from app.models.server import ServerPublic, ServerCreate
 from app.models.message import Message
 
-import app.crud.server as server_crud
+from app.crud import server as server_crud
 
 
 router = APIRouter(prefix="/servers", tags=["servers"])

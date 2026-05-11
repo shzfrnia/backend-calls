@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Optional
 import uuid
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship, SQLModel, UniqueConstraint
 
 from app.models.role_permission import RolePermission
 
@@ -10,10 +10,7 @@ if TYPE_CHECKING:
 
 
 class RoleBase(SQLModel):
-    name: str = Field(
-        min_length=1, max_length=255,
-        nullable=False, unique=True
-    )
+    name: str = Field(min_length=1, max_length=255, nullable=False)
 
 
 class RoleCreate(RoleBase):
@@ -25,6 +22,8 @@ class RoleUpdate(RoleBase):
 
 
 class Role(RoleBase, table=True):
+    __table_args__ = (UniqueConstraint("name", "server_id"),)
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
 
     permissions: list["Permission"] = Relationship(

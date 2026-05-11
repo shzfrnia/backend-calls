@@ -1,9 +1,7 @@
 from typing import TYPE_CHECKING, Annotated
-import uuid
 
 from sqlmodel import Field, Relationship, SQLModel
 
-from app.models.mixin import UUIDMixin
 from app.models.role_permission import RolePermission
 
 
@@ -22,11 +20,13 @@ class PermissionBase(SQLModel):
     name: PermissionField
 
 
-class Permission(UUIDMixin, PermissionBase, table=True):
+class Permission(PermissionBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+
     roles: list["Role"] = Relationship(
         back_populates="permissions", link_model=RolePermission
     )
 
 
 class PermissionPublic(PermissionBase):
-    id: uuid.UUID
+    id: int

@@ -6,16 +6,16 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.errors import BadRequestError
 
-import app.crud.user as user_crud
+from app.core import security
 
 from app.api.deps import SessionDep
-
-from app.core import security
 
 from app.core.config import settings
 
 from app.models.token import Token
 from app.models.user import UserPublic, UserCreate, UserRegister
+
+from app.crud import user as user_crud
 
 
 router = APIRouter(tags=["login"])

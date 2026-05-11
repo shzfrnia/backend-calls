@@ -2,20 +2,21 @@ import uuid
 from fastapi import APIRouter, HTTPException, status
 
 from app.api.deps import CurrentUser, SessionDep
+
 from app.api.manager import manager
 
 from app.models.server import ServerPublic
 from app.models.invite import InvitePublic, InvitesPublic
 from app.models.message import Message
 
-import app.crud.invite as invite_crud
+from app.crud import invite as invite_crud
 
 
 router = APIRouter(tags=["invites"])
 
 
 @router.post("/servers/{server_id}/invites", response_model=InvitePublic)
-def get_or_create_server_invite_code(
+def get_or_create_server_invite(
     *, session: SessionDep, current_user: CurrentUser, server_id: uuid.UUID
 ) -> InvitePublic:
     """
@@ -28,7 +29,7 @@ def get_or_create_server_invite_code(
 
 
 @router.get("/servers/{server_id}/invites", response_model=InvitesPublic)
-def all_server_invites(
+def server_invites(
     *, session: SessionDep, current_user: CurrentUser, server_id: uuid.UUID
 ) -> InvitesPublic:
     """
@@ -59,7 +60,7 @@ def delete_server_invite(
 
 
 @router.delete("/servers/{server_id}/invites", response_model=Message)
-def delete_all_server_invites(
+def delete_server_invites(
     *, session: SessionDep, current_user: CurrentUser, server_id: uuid.UUID
 ) -> Message:
     """
