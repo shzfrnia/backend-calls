@@ -9,7 +9,7 @@ from app.models.user_server import UserServer
 from app.models.mixin import CreatedMixin
 
 if TYPE_CHECKING:
-    from app.models import Item, Server, Invite
+    from app.models import Server, Invite
 
 
 class UserBase(SQLModel):
