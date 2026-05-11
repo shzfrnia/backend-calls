@@ -16,8 +16,6 @@ class UserBase(SQLModel):
     email: EmailStr = Field(unique=True, index=True, max_length=255)
     login: str = Field(unique=True, min_length=5, max_length=255)
     nickname: str | None = Field(default=None, max_length=255)
-    is_active: bool = True
-    is_superuser: bool = False
 
 
 class UserCreate(UserBase):
@@ -42,6 +40,8 @@ class UserUpdateMe(SQLModel):
 class User(CreatedMixin, UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
+    is_active: bool = True
+    is_superuser: bool = False
 
     servers: list["Server"] = Relationship(
         back_populates="users", link_model=UserServer,
