@@ -54,7 +54,7 @@ class User(CreatedMixin, UserBase, table=True):
 
     my_servers: list["Server"] = Relationship(back_populates="owner")
 
-    invites: list["Invite"] = Relationship(back_populates='user')
+    invites: list["Invite"] = Relationship(back_populates='owner')
 
 
 class UserPublic(UserBase):

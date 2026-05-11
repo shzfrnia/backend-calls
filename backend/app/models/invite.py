@@ -43,10 +43,10 @@ class Invite(CreatedMixin, InviteBase, table=True):
     )
     server: Optional["Server"] = Relationship(back_populates="invites")
 
-    user_id: uuid.UUID = Field(
+    owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE"
     )
-    user: Optional["User"] = Relationship(back_populates="invites")
+    owner: Optional["User"] = Relationship(back_populates="invites")
 
 
 class InvitePublic(InviteBase):
