@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime
@@ -20,3 +21,7 @@ class CreatedMixin(SQLModel):
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True)
     )
+
+
+class UUIDMixin(SQLModel):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
