@@ -9,12 +9,12 @@ def setup_handlers(app: FastAPI):
     async def not_found_handler(request: Request, exc: ObjectNotFoundError):
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            content={"detail": exc.message},
+            content={"detail": str(exc)},
         )
 
     @app.exception_handler(AccessDeniedError)
     async def access_denied_handler(request: Request, exc: AccessDeniedError):
         return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
-            content={"detail": exc.message},
+            content={"detail": str(exc)},
         )

@@ -54,7 +54,7 @@ class InvitePublic(InviteBase):
     used: int
     code: str
     created_at: datetime
-    user: "UserPublic"
+    owner: "UserPublic"
 
 
 class InvitesPublic(SQLModel):
