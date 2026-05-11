@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.errors import BadRequestError
 
-from app import crud
+from app.crud.user import user_crud
 
 from app.api.deps import SessionDep
 
@@ -26,7 +26,7 @@ def signup(session: SessionDep, user_in: UserRegister) -> UserPublic:
     """
     Create new user without the need to be logged in.
     """
-    user = crud.get_user_by_email_or_login(
+    user = user_crud.get_user_by_email_or_login(
         session=session, email=user_in.email, login=user_in.login
     )
 
@@ -35,7 +35,7 @@ def signup(session: SessionDep, user_in: UserRegister) -> UserPublic:
             "The user with this email or login already exists in the system"
         )
 
-    user = crud.create_user(
+    user = user_crud.create_user(
         session=session, user_create=UserCreate.model_validate(user_in)
     )
 
@@ -49,7 +49,7 @@ def signin(
     """
     OAuth2 compatible token login, get an access token for future requests
     """
-    user = crud.authenticate(
+    user = user_crud.authenticate(
         session=session, username=form_data.username, password=form_data.password
     )
 
