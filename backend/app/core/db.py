@@ -4,7 +4,7 @@ from app.core.config import settings
 
 from app.models.user import User, UserCreate
 
-from app.crud.user import user_crud
+from app.crud.user import create_user
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
@@ -34,4 +34,4 @@ def init_db(session: Session) -> None:
             password=settings.FIRST_SUPERUSER_PASSWORD,
             is_superuser=True,
         )
-        user = user_crud.create_user(session=session, user_create=user_in)
+        user = create_user(session=session, user_create=user_in)

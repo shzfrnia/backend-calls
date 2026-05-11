@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.errors import BadRequestError
 
-from app.crud.user import user_crud
+import app.crud.user as user_crud
 
 from app.api.deps import SessionDep
 
