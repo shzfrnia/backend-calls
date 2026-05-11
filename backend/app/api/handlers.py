@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
-from app.errors import ObjectNotFoundError, AccessDeniedError
+from app.errors import ObjectNotFoundError, AccessDeniedError, BadRequestError
 
 
 def setup_handlers(app: FastAPI):
@@ -16,5 +16,12 @@ def setup_handlers(app: FastAPI):
     async def access_denied_handler(request: Request, exc: AccessDeniedError):
         return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
+            content={"detail": str(exc)},
+        )
+
+    @app.exception_handler(BadRequestError)
+    async def bad_request_handler(request: Request, exc: BadRequestError):
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
             content={"detail": str(exc)},
         )
