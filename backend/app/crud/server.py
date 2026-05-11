@@ -1,17 +1,16 @@
 import uuid
-import secrets
-import string
 
-from sqlmodel import Session, select, col, delete
+from sqlmodel import Session, select, col
 from sqlalchemy.orm import selectinload
 
-from app.models.user import User, UserPublic
+from app.errors import ObjectNotFoundError, AccessDeniedError
+
+from app.models.user import User
 from app.models.server import Server, ServerCreate
 from app.models.user_server import UserServer, UserServerCreate
 
 from app.models.category import Category, CategoryCreate
 from app.models.channel import Channel, ChannelCreate
-from app.models.invite import Invite
 
 
 def create_server(*, session: Session, user: User, server_draft: ServerCreate) -> Server:
@@ -82,10 +81,11 @@ def create_server(*, session: Session, user: User, server_draft: ServerCreate) -
 
 def delete_server(*, session: Session, user: User, id: uuid.UUID) -> bool:
     server = session.get(Server, id)
+
     if not server:
-        raise ValueError("Item not found")
+        raise ObjectNotFoundError("Server not found")
     if user.id != server.owner_id:
-        raise PermissionError(detail="Not enough permissions")
+        raise AccessDeniedError("Not enough permissions")
 
     session.delete(server)
     session.commit()
@@ -131,163 +131,6 @@ def get_server_users_by_ids(*, session: Session, server_id: uuid.UUID, user_ids:
     return result.all()
 
 
-def get_channel_by_id(*, session: Session, channel_id: uuid.UUID, user: UserPublic):
-    statement = (
-        select(Channel)
-        .join(Server)
-        .join(UserServer)
-        .where(UserServer.user_id == user.id)
-        .where(Channel.id == channel_id)
-    )
-
-    result = session.exec(statement)
-
-    return result.one_or_none()
-
-
-def get_server_invite_code(*, session: Session, server_id: uuid.UUID, user_id: uuid.UUID):
-    statement = (
-        select(UserServer)
-        .where(
-            UserServer.user_id == user_id,
-            UserServer.server_id == server_id
-        )
-    )
-    user_is_member = session.exec(statement)
-
-    if (not user_is_member.one_or_none()):
-        raise ValueError('User not member')
-
-    statement = (
-        select(Invite)
-        .join(Server)
-        .where(Server.id == server_id).where(Invite.user_id == user_id)
-    )
-    invite = session.exec(statement).one_or_none()
-
-    if invite:
-        return invite
-    characters = string.digits
-    code = '-'.join(
-        ''.join(secrets.choice(characters) for __ in range(4))
-        for _ in range(3)
-    )
-    invite = Invite(server_id=server_id, user_id=user_id, code=code)
-    session.add(invite)
-    session.commit()
-    session.refresh(invite)
-
-    return invite
-
-
-def get_server_invites(*, session: Session, server_id: uuid.UUID, user_id: uuid.UUID):
-    statement = (
-        select(UserServer)
-        .where(
-            UserServer.user_id == user_id,
-            UserServer.server_id == server_id
-        )
-    )
-    server_user = session.exec(statement).one_or_none()
-
-    if (not server_user):
-        raise ValueError('User not member')
-
-    if (not server_user.server.owner_id == user_id):
-        raise ValueError('Permission')
-
-    return server_user.server.invites
-
-
-def delete_server_invite(
-        *, session: Session, server_id: uuid.UUID, user_id: uuid.UUID, invite_id: uuid.UUID
-):
-    statement = (
-        select(UserServer)
-        .where(
-            UserServer.user_id == user_id,
-            UserServer.server_id == server_id
-        )
-    )
-    server_user = session.exec(statement).one_or_none()
-
-    if (not server_user):
-        raise ValueError('User not member')
-
-    if (not server_user.server.owner_id == user_id):
-        raise ValueError('Permission')
-
-    invite = session.get(Invite, invite_id)
-    if not invite:
-        raise ValueError("Invite not found")
-
-    session.delete(invite)
-    session.commit()
-
-    return True
-
-
-def delete_server_invites(
-        *, session: Session, server_id: uuid.UUID, user_id: uuid.UUID
-):
-    statement = (
-        select(UserServer)
-        .where(
-            UserServer.user_id == user_id,
-            UserServer.server_id == server_id
-        )
-    )
-    server_user = session.exec(statement).one_or_none()
-
-    if (not server_user):
-        raise ValueError('User not member')
-
-    if (not server_user.server.owner_id == user_id):
-        raise ValueError('Permission')
-
-    statement = (
-        delete(Invite)
-        .where(Invite.server_id == server_id)
-    )
-
-    session.exec(statement)
-    session.commit()
-
-    return True
-
-
-def get_server_by_code(*, session: Session, code: str):
-    statement = (select(Server).join(Invite).where(Invite.code == code))
-    return session.exec(statement).one_or_none()
-
-
-def join_user_to_server_by_code(*, session: Session, code: str, user: User):
-    invite = session.exec(
-        (select(Invite).where(Invite.code == code))
-    ).one_or_none()
-
-    if not invite:
-        raise ValueError('Server not found')
-
-    server = invite.server
-
-    link = UserServer.model_validate(
-        UserServerCreate(
-            user_id=user.id,
-            server_id=server.id,
-            order=len(user.servers) + 1
-        )
-    )
-
-    invite.used = invite.used + 1
-
-    session.add(invite)
-    session.add(link)
-    session.commit()
-
-    return True
-
-
 def leave_from_server(*, session: Session, server_id: str, user: User):
     statement = (
         select(UserServer)
@@ -303,6 +146,6 @@ def leave_from_server(*, session: Session, server_id: str, user: User):
         session.delete(link)
         session.commit()
     else:
-        raise ValueError('link not found')
+        raise ObjectNotFoundError('Link not found')
 
     return True

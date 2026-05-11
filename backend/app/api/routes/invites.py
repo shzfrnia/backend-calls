@@ -1,5 +1,4 @@
 import uuid
-from typing import Any
 from fastapi import APIRouter, HTTPException, status
 
 from app.api.deps import CurrentUser, SessionDep
@@ -9,7 +8,7 @@ from app.models.server import ServerPublic
 from app.models.invite import InvitePublic, InvitesPublic
 from app.models.message import Message
 
-import app.crud.server as server_crud
+import app.crud.invite as invite_crud
 
 
 router = APIRouter(tags=["invites"])
@@ -23,7 +22,7 @@ def get_or_create_server_invite_code(
     Get or create invite code.
     """
 
-    return server_crud.get_server_invite_code(
+    return invite_crud.get_server_invite_code(
         session=session, user_id=current_user.id, server_id=server_id
     )
 
@@ -35,7 +34,7 @@ def all_server_invites(
     """
     Get all server invites.
     """
-    result = server_crud.get_server_invites(
+    result = invite_crud.get_server_invites(
         session=session, user_id=current_user.id, server_id=server_id
     )
 
@@ -49,7 +48,7 @@ def delete_server_invite(
     """
     Delete server invite.
     """
-    server_crud.delete_server_invite(
+    invite_crud.delete_server_invite(
         session=session,
         user_id=current_user.id,
         server_id=server_id,
@@ -66,7 +65,7 @@ def delete_all_server_invites(
     """
     Delete all server invites.
     """
-    server_crud.delete_server_invites(
+    invite_crud.delete_server_invites(
         session=session,
         user_id=current_user.id,
         server_id=server_id,
@@ -82,7 +81,7 @@ async def get_server_by_invite(
     """
     Get server by invite code
     """
-    server = server_crud.get_server_by_code(session=session, code=code)
+    server = invite_crud.get_server_by_code(session=session, code=code)
 
     if not server:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
@@ -97,12 +96,9 @@ async def join_server_by_invite(
     """
     Join server by code
     """
-    try:
-        server_crud.join_user_to_server_by_code(
-            session=session, user=current_user, code=code
-        )
-    except ValueError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    invite_crud.join_user_to_server_by_code(
+        session=session, user=current_user, code=code
+    )
 
     await manager.update_servers(user=current_user)
 

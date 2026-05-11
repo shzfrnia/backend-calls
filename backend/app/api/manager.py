@@ -19,7 +19,8 @@ from app.models.ws.message import (
     WSMessage, UserJoinChannelMessage, UserLeftChannelMessage, UserUpdateMuteMessage
 )
 
-from app.crud.server import get_server_users_by_ids, get_channel_by_id
+from app.crud.server import get_server_users_by_ids
+from app.crud.channel import get_channel_by_id
 
 
 ws_message_adapter = TypeAdapter(WSMessage)

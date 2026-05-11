@@ -1,5 +1,5 @@
 import uuid
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 
 from app.api.deps import CurrentUser, SessionDep
 from app.api.manager import manager
@@ -36,12 +36,7 @@ async def delete_server(
     """
     Delete server.
     """
-    try:
-        server_crud.delete_server(session=session, user=current_user, id=id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="Server not found")
-    except PermissionError:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    server_crud.delete_server(session=session, user=current_user, id=id)
 
     await manager.update_servers(user=current_user)
 
@@ -55,12 +50,9 @@ async def leave_from_server(
     """
     Join server by code
     """
-    try:
-        server_crud.leave_from_server(
-            session=session, user=current_user, server_id=id
-        )
-    except ValueError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    server_crud.leave_from_server(
+        session=session, user=current_user, server_id=id
+    )
 
     client = manager.get_client(user=current_user)
     if client.channel and client.channel.server_id == id:
