@@ -9,7 +9,7 @@ from app.models.user_server import UserServer
 from app.models.mixin import CreatedMixin
 
 if TYPE_CHECKING:
-    from app.models import Item, Server, Invite
+    from app.models import Server, Invite
 
 
 class UserBase(SQLModel):
@@ -27,12 +27,11 @@ class UserCreate(UserBase):
 class UserRegister(SQLModel):
     email: EmailStr = Field(max_length=255)
     password: str = Field(min_length=8, max_length=128)
-    login: str | None = Field(min_length=5, max_length=255)
+    login: str = Field(min_length=5, max_length=255)
 
 
 class UserUpdate(UserBase):
-    email: EmailStr | None = Field(default=None, max_length=255)
-    password: str | None = Field(default=None, min_length=8, max_length=128)
+    email: EmailStr | None = None
 
 
 class UserUpdateMe(SQLModel):
@@ -43,11 +42,6 @@ class UserUpdateMe(SQLModel):
 class User(CreatedMixin, UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
-
-    items: list["Item"] = Relationship(
-        back_populates="owner",
-        cascade_delete=True
-    )
 
     servers: list["Server"] = Relationship(
         back_populates="users", link_model=UserServer,

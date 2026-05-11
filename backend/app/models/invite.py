@@ -4,6 +4,8 @@ from datetime import datetime
 
 from sqlmodel import Field, Relationship, SQLModel, CheckConstraint
 
+from sqlalchemy import String
+
 
 from app.models.mixin import CreatedMixin
 
@@ -17,7 +19,7 @@ class InviteBase(SQLModel):
 
 
 class InviteCreate(InviteBase):
-    pass
+    server_id: uuid.UUID
 
 
 class Invite(CreatedMixin, InviteBase, table=True):
@@ -27,12 +29,13 @@ class Invite(CreatedMixin, InviteBase, table=True):
         default=0,
         nullable=False,
         ge=0,
-        sa_column_args=(CheckConstraint("used > 0"),)
+        sa_column_args=(CheckConstraint("used >= 0"),)
     )
 
     code: str = Field(
         min_length=1, max_length=255,
-        nullable=False, unique=True
+        nullable=False, unique=True,
+        sa_type=String(255)
     )
 
     server_id: uuid.UUID = Field(
@@ -50,12 +53,12 @@ class InvitePublic(InviteBase):
     id: uuid.UUID
     used: int
     code: str
-    user: "UserPublic"
     created_at: datetime
+    user: "UserPublic"
 
 
 class InvitesPublic(SQLModel):
-    data: list["InvitePublic"]
+    data: list[InvitePublic]
     count: int
 
 
